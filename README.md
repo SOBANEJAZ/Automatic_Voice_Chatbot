@@ -40,7 +40,7 @@ Install it yourself.  You're not like Windows users and You are the chad and cha
 Install the required Python libraries:
 
 ```bash
-pip install openai elevenlabs pyaudio wave keyboard faster_whisper numpy torch
+pip install -r requirements.txt
 ```
 ### 3. 🏃‍♀️ Run the Script:
 
