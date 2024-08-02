@@ -1,61 +1,57 @@
-# Seamless and real-time voice interaction with AI Voice Chatbot  
+# 🎙️🤖 Seamless and Real-Time Voice Interaction with AI Voice Chatbot 🗣️💬
 
-> **Hint:** *Anybody interested in state-of-the-art voice solutions please also <strong>have a look at [Linguflex](https://github.com/KoljaB/Linguflex)</strong>. It lets you control your environment by speaking and is one of the most capable and sophisticated open-source assistants currently available.*
+🚀 Uses faster_whisper and elevenlabs input streaming for low latency responses to spoken input.
 
-Uses faster_whisper and elevenlabs input streaming for low latency responses to spoken input.
+## 🛠️ Setup
 
-**[🎥 Watch a Demo Video](https://www.youtube.com/watch?v=lq_Q6y47iUU)** 
-> **Note**: The demo is conducted on a 10Mbit/s connection, so actual performance might be more impressive on faster connections.
+### 1. 🔑 API Keys
 
-`voice_talk_vad.py` - automatically detects speech  
+Replace `openai` and `elevenlabs` with your OpenAI and ElevenLabs API key values in the .env file
 
-`voice_talk.py` - toggle recording on/off with the spacebar
+### 2. 📦 Dependencies 
 
-## 🛠 Setup:
+#### 🎵 mpv player installation
 
-### 1. API Keys:
+Make sure you have installed mpv player.
 
-Replace `your_openai_key` and `your_elevenlabs_key` with your OpenAI and ElevenLabs API key values in the code.
+> 🖥️ Windows Users:
 
-### 2. Dependencies:
+1. 📥 Download the latest mpv archive file from https://mpv.io/
+2. 📁 Extract the folder and rename it to mpv
+3. 📌 Copy the folder to "C:\Program Files"
+4. 🔒 Give user permissions (right-click "mpv" folder, properties, security, Users --> Full Control checkbox)
+5. 🏃‍♂️ Go to installer folder and run the installer as Administrator
+6. 📋 Copy the directory "C:\Program Files\mpv"
+7. 🔍 Open "System Environment Variables" from the Windows search bar and click "Environment Variables"
+8. 📝 In System environment variables, find "Path", click "Edit"
+9. ➕ Add "C:\Program Files\mpv" to the list and click Ok on all windows
+10. 🔄 Restart the system
+
+> 🍎 Mac Users:
+
+Run: `brew install mpv`
+
+> 🐧 Linux Users:
+
+Install it yourself.  You're not like Windows users and You are the chad and chads don't need help.. 😉
+
+#### 📚 Python Libraries:
 
 Install the required Python libraries:
-```bash
-pip install openai elevenlabs pyaudio wave keyboard faster_whisper numpy torch 
-```
-
-### 3. Run the Script:
-
-Execute the main script based on your mode preference:
 
 ```bash
-python voice_talk_vad.py
+pip install openai elevenlabs pyaudio wave keyboard faster_whisper numpy torch
 ```
-or
+### 3. 🏃‍♀️ Run the Script:
+
+Execute the main script:
+
 ```bash
-python voice_talk.py
+python main.py
 ```
-## 🎙 How to Use:
-
-### For `voice_talk_vad.py`:
-
-Talk into your microphone.  
-Listen to the reply.
-
-### For `voice_talk.py`:
-
-1. Press the **space bar** to initiate talk.
-2. Speak your heart out.
-3. Hit the **space bar** again once you're done.
-4. Listen to reply.
+🗣️ Talk into your microphone and 
+👂 Listen to the reply
 
 ## 🤝 Contribute
 
-Feel free to fork, improve, and submit pull requests. If you're considering significant changes or additions, please start by opening an issue.
-
-## 💖 Acknowledgements
-
-Huge shoutout to:
-- The hardworking developers behind [faster_whisper](https://github.com/guillaumekln/faster-whisper).
-- [ElevenLabs](https://www.elevenlabs.io/) for their cutting-edge voice API.
-- [OpenAI](https://www.openai.com/) for pioneering with the GPT-4 model.
+🌟 Feel free to fork, improve, and submit pull requests. If you're considering significant changes or additions, please start by opening an issue.
