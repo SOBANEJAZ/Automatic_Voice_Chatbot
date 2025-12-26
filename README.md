@@ -6,7 +6,7 @@
 
 ### 1. 🔑 API Keys
 
-Rename the `.env_example` to `.env` and enter your OpenAI and ElevenLabs API key values in the .env file
+Rename the `.env_example` to `.env` and enter your Google Gemini and ElevenLabs API key values in the .env file
 
 ### 2. 📦 Dependencies 
 

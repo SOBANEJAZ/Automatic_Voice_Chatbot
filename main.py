@@ -1,96 +1,52 @@
-from openai import OpenAI
-import pyaudio, wave,  wave, numpy, collections, faster_whisper, torch.cuda, os
+from google import genai
+from google.genai import types
+import pyaudio, wave, numpy, collections, faster_whisper, torch.cuda, os
 from elevenlabs.client import ElevenLabs
 from elevenlabs import stream
 
-from dotenv import load_dotenv, find_dotenv
+from dotenv import load_dotenv
 
-dotenv_path = find_dotenv()
-load_dotenv(dotenv_path)
+load_dotenv()
 
-openai_api = os.getenv("openai")
-elevenlabs_api = os.getenv("elevenlabs")
+google_api_key = os.getenv("GOOGLE_API_KEY")
+elevenlabs_api = os.getenv("ELEVENLABS_API_KEY")
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
-openai_client = OpenAI(api_key=openai_api)
+print("Initializing Gemini Client...")
+gemini_client = genai.Client(api_key=google_api_key, http_options={'api_version': 'v1alpha'})
 elevenlabs_client = ElevenLabs(api_key=elevenlabs_api)
+print("Clients initialized.")
 
-
-system_prompt = {
-    'role': 'system',
-    'content': '''
-You are Ronaldo, a savvy Nike shoe seller with a knack for negotiation and excellent customer service skills. You never reveal that you are an AI. Your primary goal is to sell shoes while ensuring customer satisfaction. You respond in a friendly, professional manner, providing detailed product information and handling price negotiations with finesse.
-
-You have a range of Nike shoes including running shoes and football boots. Here are five products with their details and prices:
-
-1. **Nike AlphaFly NEXT%** - Running Shoes
-   - Price: $250
-   - Features: Lightweight, responsive cushioning, breathable upper
-
-2. **Nike Air Zoom Pegasus 39** - Running Shoes
-   - Price: $120
-   - Features: FlyEase technology, durable, good for daily training
-
-3. **Nike Phantom GT2 Elite** - Football Boots
-   - Price: $250
-   - Features: Precision strike zone, all-weather control, snug fit
-
-4. **Nike Mercurial Superfly 8 Elite** - Football Boots
-   - Price: $275
-   - Features: Flyknit upper, Aerotrak zone, dynamic fit collar
-
-5. **Nike Tiempo Legend 9 Elite** - Football Boots
-   - Price: $230
-   - Features: Soft kangaroo leather, adaptive fit, hyperstability soleplate
-
-**Negotiation and Customer Support Tips:**
-
-1. **Understand Customer Needs:**
-   - Ask what they are looking for in a shoe (comfort, performance, style).
-   - Suggest shoes that fit their needs.
-
-2. **Highlight Features:**
-   - Emphasize unique features and benefits of the shoes.
-   - Explain how these features meet the customer’s needs.
-
-3. **Flexible Pricing:**
-   - If a customer balks at the price, mention any promotions or discounts.
-   - Offer to bundle items or provide a small discount for immediate purchase.
-
-4. **Ensure Satisfaction:**
-   - Reassure with Nike’s return and exchange policies.
-   - Follow up on any concerns or questions they may have.
-
-**Example Dialogue:**
-
-**Customer:** Hi Ronaldo, I’m looking for some new running shoes. What do you recommend?
-
-**Ronaldo:** Hey there! For running, the Nike AlphaFly NEXT% is top-notch—lightweight and super comfy. Perfect for those long runs. Costs $250. If you’re into daily training, the Nike Air Zoom Pegasus 39 at $120 is a solid pick.
-
-**Customer:** $250 is a bit steep. Do you have any deals?
-
-**Ronaldo:** I hear you. We’ve got a 10% discount if you grab them today. Plus, they come with a 30-day trial. Not happy? Return them, no questions asked.
-
-**Customer:** That’s interesting. Can you tell me more about the Pegasus?
-
-**Ronaldo:** Absolutely! The Pegasus 39 has FlyEase tech, making them super easy to slip on. Durable and great for everyday use. And, at $120, they’re a steal for the quality.
-
-**Customer:** Sounds good. I think I’ll go with the Pegasus. Thanks!
-
-**Ronaldo:** Great choice! I’ll get them ready for you. Any questions or need another pair, just holler!
+system_instruction = '''
+You are a charming, witty, and friendly AI companion. You love having engaging conversations and acting as a helpful friend. Your responses are concise, natural, and suitable for a voice conversation. You have a great sense of humor and are always empathetic. Your responses are always 2 liners, crisp and clear.
 '''
-}
 
 
+print("Loading Whisper Model... (This might take a while on first run)")
 model, answer, history = faster_whisper.WhisperModel(model_size_or_path="tiny.en", device='cuda' if torch.cuda.is_available() else 'cpu', compute_type="float32"), "", []
+print("Whisper Model Loaded.")
 
-def generate(messages):
+def generate(history):
     global answer
-    answer = ""        
-    for chunk in openai_client.chat.completions.create(model="gpt-4o-mini", messages=messages, stream=True):
-        if (text_chunk := chunk.choices[0].delta.content):
-            answer += text_chunk
-            print(text_chunk, end="", flush=True) 
-            yield text_chunk
+    answer = ""
+    # Convert history to Gemini format
+    gemini_history = []
+    for msg in history:
+        role = "user" if msg['role'] == "user" else "model"
+        gemini_history.append(types.Content(role=role, parts=[types.Part(text=msg['content'])]))
+
+    response_stream = gemini_client.models.generate_content_stream(
+        model="gemini-2.5-flash",
+        contents=gemini_history,
+        config=types.GenerateContentConfig(
+            system_instruction=system_instruction
+        )
+    )
+
+    for chunk in response_stream:
+        if chunk.text:
+            answer += chunk.text
+            print(chunk.text, end="", flush=True)
+            yield chunk.text
 
 def get_levels(data, long_term_noise_level, current_noise_level):
     pegel = numpy.abs(numpy.frombuffer(data, dtype=numpy.int16)).mean()
@@ -124,6 +80,8 @@ while True:
     py_stream.stop_stream(), py_stream.close(), audio.terminate()        
 
     # Transcribe recording using whisper
+    if not os.path.exists("temp_files"):
+        os.makedirs("temp_files")
     with wave.open("temp_files/voice_record.wav", 'wb') as wf:
         wf.setparams((1, audio.get_sample_size(pyaudio.paInt16), 16000, 0, 'NONE', 'NONE'))
         wf.writeframes(b''.join(frames))
@@ -132,6 +90,13 @@ while True:
     history.append({'role': 'user', 'content': user_text})
 
     # Generate and stream output
-    generator = generate([system_prompt] + history[-10:])
-    stream(elevenlabs_client.generate(text=generator, voice="l8umtSDYgvFAJYD7pheU", model="eleven_multilingual_v2", stream=True))    
+    generator = generate(history[-10:])
+    audio_stream = elevenlabs_client.text_to_speech.convert_realtime(
+        text=generator,
+        voice_id="CwhRBWXzGAHq8TQ4Fs17",
+        model_id="eleven_multilingual_v2",
+        output_format="mp3_44100_128",
+        voice_settings=None
+    )
+    stream(audio_stream)
     history.append({'role': 'assistant', 'content': answer})
