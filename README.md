@@ -1,6 +1,6 @@
-# 🎙️🤖 Seamless and Real-Time Voice Interaction with AI Voice Chatbot 🗣️💬
+# 🎙️🤖 Seamless and Real-Time Voice Interaction with AI Voice Chatbot
 
-🚀 Uses faster_whisper and elevenlabs input streaming for low latency responses to spoken input.
+Uses faster_whisper and elevenlabs input streaming for low latency responses to spoken input.
 
 ## 🛠️ Setup
 
